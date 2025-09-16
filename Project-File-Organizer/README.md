@@ -1,130 +1,137 @@
+📁 File Organizer Script
+📝 Description
+This Bash script organizes files in a specified directory into subdirectories based on their file types (extensions). It helps keep directories clean and structured.
+
+🚀 How It Works — Line-by-Line Explanation
+
+
+
+Shell
+#!/bin/bash
+
+Defines the interpreter as Bash.
+
+
+
+
+Shell
+# Description: This script organizes files in a specified directory into subdirectories based on their file types.
+
+Comment describing the script’s purpose.
+
+
+
+
+Shell
+DIR=${1:-.}
+
+Sets the working directory:
+
+If a directory is passed as an argument ($1), it uses that.
+Otherwise, it defaults to the current directory (.).
+
+
+
+Shell
+if [ ! -d "$DIR" ]; 
+then 
+  echo "Directory $DIR does not exist."
+  exit 1
+else
+  echo "Directory $DIR exists."
+  echo "Let's start working on it."
+fi
+
+Checks if the directory exists:
+
+If not, exits with an error.
+If yes, confirms and proceeds.
+
+
+
+Shell
 for file in "$DIR"/*; do
+    [ -e "$file" ] || continue
 
-This is a for loop.  
+Loops through each item in the directory and skips if the file doesn’t exist.
 
-It looks at everything (*) inside the directory $DIR.  
 
-Each item (file or folder) is assigned to the variable file.  
 
-*Example:* If $DIR = /home/user/Desktop, then file could be /home/user/Desktop/photo.jpg.  
 
----
+Shell
+    if [ -d "$file" ]; 
+    then
+        continue
+    fi
 
-[ -e "$file" ] || continue  
+Skips directories — only files are processed.
 
-[ -e "$file" ] checks if the file exists.  
 
-If it does not exist, then || continue means skip to the next item.  
 
-*Why?* Because if the folder is empty, the loop still runs once with a literal *, and we don’t want to process that.  
 
----
+Shell
+    filename=$(basename -- "$file")
+    extension="${filename##*.}"
 
-if [ -d "$file" ]; then continue; fi  
+Extracts:
 
-[ -d "$file" ] checks if the item is a directory.  
+filename: the name of the file.
+extension: the part after the last dot (.).
 
-If true, then continue means skip this item and move to the next.  
 
-*Reason:* We don’t want to move folders around, only files.  
 
----
+Shell
+    if [ "$filename" = "$extension" ]; then
+        extension="others"
+    fi
 
-filename=$(basename -- "$file")  
+Handles files without extensions by assigning them to an "others" category.
 
-basename strips the directory path, leaving just the file’s name.  
 
-*Example:* /home/user/Desktop/photo.jpg → photo.jpg.  
 
-We store that in filename.  
 
----
+Shell
+    folder="$(tr '[:lower:]' '[:upper:]' <<< ${extension:0:1})${extension:1}s"
 
-extension="${filename##*.}"  
+Creates a folder name:
 
-This extracts the file extension using parameter expansion.  
+Capitalizes the first letter of the extension.
+Adds an s at the end (e.g., jpg → Jpgs).
 
-${filename##*.} means “remove everything up to the last dot (.)”.  
 
-*Examples:*  
-- photo.jpg → jpg  
-- archive.tar.gz → gz (because it takes the last one).  
 
----
+Shell
+    mkdir -p "$DIR/$folder"
+    mv "$file" "$DIR/$folder/"
+    echo "Moved: $filename → $folder/"
 
-if [ "$filename" = "$extension" ]; then extension="others"; fi  
+Creates the folder if it doesn’t exist, moves the file into it, and prints a message.
 
-If the filename has no dot at all, then the “extension” will equal the full filename.  
 
-*Example:* README → extension = README (same as filename).  
 
-That means it doesn’t really have an extension, so we override it with *"others"*.  
 
----
+Shell
+done
 
-✅ So by the end of Step 2, we know:  
-- The file exists  
-- It’s not a directory  
-- Its extension is correctly identified (or *"others"* if no extension).  
+Ends the loop.
 
----
 
-folder="$(tr '[:lower:]' '[:upper:]' <<< ${extension:0:1})${extension:1}s"  
 
-This builds the folder name where the file should go.  
 
-- ${extension:0:1} → extracts the first letter of the extension.  
-- tr '[:lower:]' '[:upper:]' → converts that first letter to uppercase.  
-- ${extension:1} → everything from the second character onward.  
-- Add an "s" at the end to make it plural.  
+Shell
+echo "Organization complete!"
 
-*Examples:*  
-- extension = jpg → folder = Jpgs  
-- extension = txt → folder = Txts  
-- extension = others → folder = Others  
+Final message after organizing all files.
 
----
+📦 Example Usage
 
-mkdir -p "$DIR/$folder"  
 
-mkdir creates the folder where we’ll put the files.  
 
-- -p means “no error if it already exists”, and it will also create parent directories if needed.  
+Shell
+bash organize.sh /home/karan/downloads
 
-*Example:* If $DIR = /home/user/Desktop and folder = Images, then it ensures /home/user/Desktop/Images exists.  
+This will:
 
----
-
-mv "$file" "$DIR/$folder/"  
-
-Moves (mv) the file into the folder.  
-
-*Example:* /home/user/Desktop/photo.jpg → /home/user/Desktop/Images/photo.jpg.  
-
----
-
-echo "Moved: $filename → $folder/"  
-
-Prints a log message to the terminal.  
-
-*Examples:*  
-- Moved: photo.jpg → Images/  
-- Moved: notes.txt → Txts/  
-
----
-
-done  
-
-Marks the end of the *for loop*.  
-
-At this point, all files in the directory have been processed.  
-
----
-
-echo "✅ Organization complete!"  
-
-Prints a final confirmation message after the loop finishes.  
-
-Lets the user know the script is done.  
-
----
+Move .jpg files to Jpgs/
+.pdf files to Pdfs/
+Files without extensions to Others/

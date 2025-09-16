@@ -170,6 +170,3 @@ A: The extension is everything after the **last** dot (`gz` → `Gzs/`). If you 
 
 ---
 
-## 🪪 License
-Choose a license (e.g., MIT, Apache-2.0) and add it here.
-
